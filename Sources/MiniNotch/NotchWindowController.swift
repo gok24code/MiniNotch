@@ -17,6 +17,7 @@ final class NotchWindowController {
 
     private let model = NotchViewModel()
     private let capture: CaptureDeviceMonitor
+    private let awake: AwakeKeeper
     private let settings: AppSettings
     private let launchAtLogin: LaunchAtLogin
     private let panel: NotchPanel
@@ -34,10 +35,12 @@ final class NotchWindowController {
         screen: NSScreen,
         battery: BatteryMonitor,
         capture: CaptureDeviceMonitor,
+        awake: AwakeKeeper,
         settings: AppSettings,
         launchAtLogin: LaunchAtLogin
     ) {
         self.capture = capture
+        self.awake = awake
         self.settings = settings
         self.launchAtLogin = launchAtLogin
         geometry = NotchGeometry(screen: screen, islandWidth: settings.islandSize.width)
@@ -49,6 +52,7 @@ final class NotchWindowController {
             model: model,
             battery: battery,
             capture: capture,
+            awake: awake,
             settings: settings,
             launchAtLogin: launchAtLogin,
             onDropTargetChange: { [weak self] in self?.dropTargetDidChange($0) },
@@ -101,6 +105,10 @@ final class NotchWindowController {
     }
 
     func captureStateDidChange() {
+        updatePresentation()
+    }
+
+    func awakeStateDidChange() {
         updatePresentation()
     }
 
@@ -160,8 +168,18 @@ final class NotchWindowController {
 
     // MARK: - Presentation
 
+    /// The task list needs the taller panel, but the mirror takes over while it is open.
+    private var wantsAwakeList: Bool {
+        awake.isEnabled && !wantsMirror
+    }
+
+    private var awakeListHeight: CGFloat {
+        wantsAwakeList ? NotchGeometry.awakeListHeight(taskCount: awake.activeTasks.count) : 0
+    }
+
     private var expandedFrame: NSRect {
-        wantsMirror ? geometry.mirrorFrame : geometry.expandedFrame
+        if wantsMirror { return geometry.mirrorFrame }
+        return wantsAwakeList ? geometry.awakeFrame(listHeight: awakeListHeight) : geometry.expandedFrame
     }
 
     private var restingWingWidth: CGFloat {
@@ -183,7 +201,9 @@ final class NotchWindowController {
             model.mirror?.stop()
         }
         let wingWidth = restingWingWidth
-        guard expand != model.isExpanded || wingWidth != model.wingWidth || wantsMirror != model.isMirroring else {
+        let showAwakeList = wantsAwakeList
+        guard expand != model.isExpanded || wingWidth != model.wingWidth || wantsMirror != model.isMirroring
+            || showAwakeList != model.isShowingAwakeList || awakeListHeight != model.awakeListHeight else {
             return
         }
 
@@ -204,6 +224,8 @@ final class NotchWindowController {
             model.isExpanded = expand
             model.wingWidth = wingWidth
             model.isMirroring = wantsMirror
+            model.isShowingAwakeList = showAwakeList
+            model.awakeListHeight = awakeListHeight
         } completion: { [weak self] in
             guard let self, !grows, id == self.transitionID else { return }
             self.setPanelFrame(target)

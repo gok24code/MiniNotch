@@ -7,6 +7,7 @@ import AppKit
 final class ScreenCoordinator {
     private let battery = BatteryMonitor()
     private let capture = CaptureDeviceMonitor()
+    private let awake = AwakeKeeper()
     private let settings = AppSettings()
     private let launchAtLogin = LaunchAtLogin()
     private var controllers: [CGDirectDisplayID: NotchWindowController] = [:]
@@ -18,10 +19,17 @@ final class ScreenCoordinator {
         capture.onChange = { [weak self] in
             self?.controllers.values.forEach { $0.captureStateDidChange() }
         }
+        awake.onChange = { [weak self] in
+            self?.controllers.values.forEach { $0.awakeStateDidChange() }
+        }
         settings.onIslandSizeChange = { [weak self] in
             self?.syncWithScreens()
         }
         syncWithScreens()
+    }
+
+    func shutdown() {
+        awake.shutdown()
     }
 
     /// Adds panels for new screens, updates existing ones and removes panels of disconnected screens.
@@ -38,6 +46,7 @@ final class ScreenCoordinator {
                     screen: screen,
                     battery: battery,
                     capture: capture,
+                    awake: awake,
                     settings: settings,
                     launchAtLogin: launchAtLogin
                 )

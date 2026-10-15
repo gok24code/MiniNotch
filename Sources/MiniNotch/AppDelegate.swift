@@ -16,6 +16,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        screens?.shutdown()
+    }
+
     @objc private func screenParametersDidChange(_ notification: Notification) {
         screens?.syncWithScreens()
     }

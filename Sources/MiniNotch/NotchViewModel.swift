@@ -13,6 +13,10 @@ final class NotchViewModel {
     /// Created on first use so AVFoundation stays idle until the mirror is opened.
     var mirror: CameraMirror?
     var isMirroring = false
+    /// Whether the expanded panel is tall enough to show the Always Awake task list.
+    var isShowingAwakeList = false
+    /// Height added below the expanded content for the task list; follows the number of apps.
+    var awakeListHeight: CGFloat = 0
 
     var style: NotchGeometry.Style = .notch
     var collapsedSize: CGSize = .zero

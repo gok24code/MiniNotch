@@ -3,21 +3,50 @@ import SwiftUI
 /// Widgets shown below the notch while the panel is expanded.
 struct ExpandedNotchContent: View {
     let battery: BatteryMonitor
+    let awake: AwakeKeeper
     let isDropTargeted: Bool
     let onOpenMirror: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             if let snapshot = battery.snapshot {
                 BatteryView(snapshot: snapshot)
             }
             DropZoneView(isTargeted: isDropTargeted)
+            AwakeToggle(awake: awake)
             MirrorButton(action: onOpenMirror)
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 14)
         .padding(.top, 6)
-        .padding(.bottom, 12)
+        .padding(.bottom, 10)
         .foregroundStyle(.white)
+    }
+}
+
+/// Always Awake switch; turning it on reveals the list of apps being waited for.
+private struct AwakeToggle: View {
+    let awake: AwakeKeeper
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Image(systemName: awake.isEnabled ? "cup.and.saucer.fill" : "cup.and.saucer")
+                .font(.system(size: 16))
+                .foregroundStyle(.white.opacity(awake.isEnabled ? 1 : 0.85))
+            Toggle("Always Awake", isOn: Binding(
+                get: { awake.isEnabled },
+                set: { awake.setEnabled($0) }
+            ))
+            .labelsHidden()
+            .toggleStyle(.switch)
+            .controlSize(.mini)
+        }
+        .frame(width: 44)
+        .frame(maxHeight: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(.white.opacity(awake.isEnabled ? 0.18 : 0.1))
+        )
+        .help("Always Awake")
     }
 }
 
@@ -30,7 +59,7 @@ private struct MirrorButton: View {
             Image(systemName: "camera.fill")
                 .font(.system(size: 18))
                 .foregroundStyle(.white.opacity(0.85))
-                .frame(width: 52)
+                .frame(width: 44)
                 .frame(maxHeight: .infinity)
                 .background(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)

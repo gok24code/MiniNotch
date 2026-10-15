@@ -9,6 +9,7 @@ struct NotchView: View {
     let model: NotchViewModel
     let battery: BatteryMonitor
     let capture: CaptureDeviceMonitor
+    let awake: AwakeKeeper
     let settings: AppSettings
     let launchAtLogin: LaunchAtLogin
     let onDropTargetChange: (Bool) -> Void
@@ -18,7 +19,9 @@ struct NotchView: View {
     var body: some View {
         let isExpanded = model.isExpanded
         let size = isExpanded
-            ? (model.isMirroring ? model.mirrorSize : model.expandedSize)
+            ? (model.isMirroring
+                ? model.mirrorSize
+                : CGSize(width: model.expandedSize.width, height: model.expandedSize.height + model.awakeListHeight))
             : CGSize(width: model.collapsedSize.width + 2 * model.wingWidth, height: model.collapsedSize.height)
         let shape = shape(isExpanded: isExpanded)
         let ear = shape.earRadius
@@ -33,11 +36,19 @@ struct NotchView: View {
                     .padding(.horizontal, ear)
                     .transition(.notchContent)
             } else if isExpanded {
-                ExpandedNotchContent(
-                    battery: battery,
-                    isDropTargeted: model.isDropTargeted,
-                    onOpenMirror: { onMirrorChange(true) }
-                )
+                VStack(spacing: 0) {
+                    ExpandedNotchContent(
+                        battery: battery,
+                        awake: awake,
+                        isDropTargeted: model.isDropTargeted,
+                        onOpenMirror: { onMirrorChange(true) }
+                    )
+                    .frame(height: NotchGeometry.expandedContentHeight)
+                    if model.isShowingAwakeList {
+                        AwakeListView(awake: awake)
+                    }
+                }
+                .frame(maxHeight: .infinity, alignment: .top)
                 .padding(.top, model.contentTopPadding)
                 .padding(.horizontal, ear)
                 .transition(.notchContent)
@@ -63,7 +74,7 @@ struct NotchView: View {
             onDropTargetChange(targeted)
         }
         .contextMenu {
-            NotchContextMenu(settings: settings, launchAtLogin: launchAtLogin)
+            NotchContextMenu(settings: settings, launchAtLogin: launchAtLogin, awake: awake)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .ignoresSafeArea()

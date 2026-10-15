@@ -15,11 +15,16 @@ struct NotchGeometry: Equatable {
     /// Gap between the island and the top screen edge (and the menu bar bottom).
     static let islandGap: CGFloat = 4
     /// Minimum width of the expanded panel.
-    static let expandedWidth: CGFloat = 400
+    static let expandedWidth: CGFloat = 340
     /// Height of the content area shown below the notch when expanded.
-    static let expandedContentHeight: CGFloat = 84
+    static let expandedContentHeight: CGFloat = 68
     /// Height of the camera preview area in mirror mode.
     static let mirrorContentHeight: CGFloat = 220
+    /// Always Awake list: row metrics, bottom padding, and how many rows show before it scrolls.
+    static let awakeRowHeight: CGFloat = 28
+    static let awakeRowSpacing: CGFloat = 4
+    static let awakeListBottomPadding: CGFloat = 10
+    static let awakeMaxVisibleRows = 3
     /// Concave ear radius of the expanded notch; the ears extend past the body on both sides.
     static let notchEarRadius: CGFloat = 10
 
@@ -68,13 +73,26 @@ struct NotchGeometry: Equatable {
 
     var expandedSize: CGSize {
         CGSize(
-            width: max(Self.expandedWidth, collapsedSize.width + 120),
+            width: max(Self.expandedWidth, collapsedSize.width + 100),
             height: contentTopPadding + Self.expandedContentHeight
         )
     }
 
     var mirrorSize: CGSize {
         CGSize(width: expandedSize.width, height: contentTopPadding + Self.mirrorContentHeight)
+    }
+
+    /// Height of the task list for `taskCount` apps: one row per app up to the limit, then it scrolls.
+    static func awakeListHeight(taskCount: Int) -> CGFloat {
+        let rows = CGFloat(min(max(taskCount, 1), awakeMaxVisibleRows))
+        return rows * awakeRowHeight + (rows - 1) * awakeRowSpacing + awakeListBottomPadding
+    }
+
+    func awakeFrame(listHeight: CGFloat) -> NSRect {
+        frame(for: CGSize(
+            width: expandedSize.width + 2 * expandedEarRadius,
+            height: expandedSize.height + listHeight
+        ))
     }
 
     var mirrorFrame: NSRect {

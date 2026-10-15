@@ -5,6 +5,7 @@ import SwiftUI
 struct NotchContextMenu: View {
     @Bindable var settings: AppSettings
     let launchAtLogin: LaunchAtLogin
+    let awake: AwakeKeeper
 
     var body: some View {
         Picker("Hover Delay", selection: $settings.hoverDelay) {
@@ -18,6 +19,10 @@ struct NotchContextMenu: View {
             }
         }
         Divider()
+        Toggle("Always Awake", isOn: Binding(
+            get: { awake.isEnabled },
+            set: { awake.setEnabled($0) }
+        ))
         Toggle("Launch at Login", isOn: Binding(
             get: { launchAtLogin.isEnabled },
             set: { launchAtLogin.setEnabled($0) }

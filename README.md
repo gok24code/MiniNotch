@@ -67,6 +67,8 @@ Measured on an Apple M5 running macOS 27.0.1: 0.0% CPU in every sample, about 46
 - Hover uses an `NSTrackingArea` on the panel's own view. There are no global event monitors.
 - Battery updates come from `IOPSNotificationCreateRunLoopSource`.
 - When collapsed, the window is exactly notch-sized and the expanded content is removed from the view hierarchy.
+- Always Awake is the one exception: while its switch is on it polls power assertions, CPU and disk every 2.5 s and
+  runs `nettop` for network traffic. Turning it off, or it finding nothing left to wait for, stops all of that.
 
 ## Known limitations
 
